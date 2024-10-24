@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 
 use pbkdf2::{
-    password_hash::{
-        PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
-    },
-    Pbkdf2
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Pbkdf2,
 };
 use rand_core::OsRng;
 use uuid::Uuid;
@@ -39,7 +37,7 @@ impl Users for UsersImpl {
 
         match result {
             Ok(_) => Some(user.user_uuid.clone()),
-            _ => None
+            _ => None,
         }
     }
 
@@ -61,7 +59,8 @@ impl Users for UsersImpl {
             password: hashed_password,
         };
 
-        self.user_uuid_to_user.insert(user.user_uuid.clone(), user.clone());
+        self.user_uuid_to_user
+            .insert(user.user_uuid.clone(), user.clone());
         self.username_to_user.insert(user.username.clone(), user);
 
         Ok(())
@@ -99,8 +98,7 @@ mod tests {
             .create_user("username".to_owned(), "password".to_owned())
             .expect("should create user");
 
-        let result = users_service
-            .create_user("username".to_owned(), "password".to_owned());
+        let result = users_service.create_user("username".to_owned(), "password".to_owned());
 
         assert!(result.is_err());
     }
@@ -113,8 +111,7 @@ mod tests {
             .create_user("username".to_owned(), "password".to_owned())
             .expect("should create user");
 
-        let option = users_service
-            .get_user_uuid("username".to_owned(), "password".to_owned());
+        let option = users_service.get_user_uuid("username".to_owned(), "password".to_owned());
 
         assert!(option.is_some());
     }

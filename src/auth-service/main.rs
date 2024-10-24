@@ -1,6 +1,6 @@
 mod auth;
-mod users;
 mod sessions;
+mod users;
 
 use std::sync::Mutex;
 

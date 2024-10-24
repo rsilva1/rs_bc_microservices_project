@@ -1,6 +1,9 @@
 use std::{borrow::BorrowMut, sync::Mutex};
 
-use authentication::{auth_server::Auth, SignInRequest, SignInResponse, SignOutRequest, SignOutResponse, SignUpRequest, SignUpResponse, StatusCode};
+use authentication::{
+    auth_server::Auth, SignInRequest, SignInResponse, SignOutRequest, SignOutResponse,
+    SignUpRequest, SignUpResponse, StatusCode,
+};
 use tonic::{Request, Response, Status};
 
 use crate::{sessions::Sessions, users::Users};
@@ -36,7 +39,9 @@ impl Auth for AuthService {
 
         let req = request.into_inner();
 
-        let users_service = self.users_service.lock()
+        let users_service = self
+            .users_service
+            .lock()
             .expect("Users service mutex poisoned");
 
         let user_uuid = users_service.get_user_uuid(req.username, req.password);
@@ -45,11 +50,13 @@ impl Auth for AuthService {
                 status_code: StatusCode::Failure.into(),
                 user_uuid: "".to_owned(),
                 session_token: "".to_owned(),
-            }))
+            }));
         }
         let user_uuid = user_uuid.unwrap();
 
-        let session_token = self.sessions_service.lock()
+        let session_token = self
+            .sessions_service
+            .lock()
             .expect("Sessions service mutex poisoned")
             .borrow_mut()
             .create_session(&user_uuid);
@@ -65,26 +72,30 @@ impl Auth for AuthService {
 
     async fn sign_up(
         &self,
-        request: Request<SignUpRequest>
+        request: Request<SignUpRequest>,
     ) -> Result<Response<SignUpResponse>, Status> {
         println!("Got a request: {:?}", request);
 
         let req = request.into_inner();
 
-        let mut users_service = self.users_service.lock()
+        let mut users_service = self
+            .users_service
+            .lock()
             .expect("Users service mutex poisoned");
 
-        let result = users_service.borrow_mut().create_user(req.username, req.password);
+        let result = users_service
+            .borrow_mut()
+            .create_user(req.username, req.password);
 
         match result {
             Ok(_) => {
                 return Ok(Response::new(SignUpResponse {
-                    status_code: StatusCode::Success.into()
+                    status_code: StatusCode::Success.into(),
                 }));
-            },
+            }
             Err(_) => {
                 return Ok(Response::new(SignUpResponse {
-                    status_code: StatusCode::Failure.into()
+                    status_code: StatusCode::Failure.into(),
                 }));
             }
         }
@@ -92,13 +103,14 @@ impl Auth for AuthService {
 
     async fn sign_out(
         &self,
-        request: Request<SignOutRequest>
+        request: Request<SignOutRequest>,
     ) -> Result<Response<SignOutResponse>, Status> {
         println!("Got a request: {:?}", request);
 
         let req = request.into_inner();
 
-        self.sessions_service.lock()
+        self.sessions_service
+            .lock()
             .expect("Sessions service mutex poisoned")
             .borrow_mut()
             .delete_session(&req.session_token);
@@ -143,10 +155,11 @@ mod tests {
         let users_service = Box::new(Mutex::new(UsersImpl::default()));
         let sessions_service = Box::new(Mutex::new(SessionsImpl::default()));
 
-        users_service.lock().unwrap().create_user(
-            "username".to_owned(),
-            "password".to_owned(),
-        ).expect("should create user");
+        users_service
+            .lock()
+            .unwrap()
+            .create_user("username".to_owned(), "password".to_owned())
+            .expect("should create user");
 
         let auth_service = AuthService::new(users_service, sessions_service);
 
@@ -170,9 +183,8 @@ mod tests {
             .create_user("username".to_owned(), "password".to_owned())
             .expect("should create user");
 
-        let user_uuid = users_service.get_user_uuid(
-            "username".to_owned(),
-            "password".to_owned())
+        let user_uuid = users_service
+            .get_user_uuid("username".to_owned(), "password".to_owned())
             .expect("should get user uuid");
 
         let users_service = Box::new(Mutex::new(users_service));
@@ -207,7 +219,7 @@ mod tests {
 
         let request = Request::new(SignUpRequest {
             username: "username".to_owned(),
-            password: "password".to_owned()
+            password: "password".to_owned(),
         });
 
         let result = auth_service.sign_up(request).await.unwrap().into_inner();
@@ -240,7 +252,7 @@ mod tests {
         let auth_service = AuthService::new(users_service, sessions_service);
 
         let request = tonic::Request::new(SignOutRequest {
-            session_token: "".to_owned()
+            session_token: "".to_owned(),
         });
 
         let result = auth_service.sign_out(request).await.unwrap();
@@ -251,13 +263,11 @@ mod tests {
     #[tokio::test]
     async fn sign_out_should_succeed_when_given_valid_session() {
         let mut users_service = UsersImpl::default();
-        users_service.create_user(
-            "username".to_owned(),
-            "password".to_owned())
+        users_service
+            .create_user("username".to_owned(), "password".to_owned())
             .expect("should create user");
-        let user_uuid = users_service.get_user_uuid(
-            "username".to_owned(),
-            "password".to_owned())
+        let user_uuid = users_service
+            .get_user_uuid("username".to_owned(), "password".to_owned())
             .expect("should get user uuid");
 
         let users_service = Box::new(Mutex::new(users_service));
