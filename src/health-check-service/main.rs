@@ -1,6 +1,8 @@
 use std::{env, error::Error, time::Duration};
 
-use authentication::{auth_client::AuthClient, SignInRequest, SignOutRequest, SignUpRequest, StatusCode};
+use authentication::{
+    auth_client::AuthClient, SignInRequest, SignOutRequest, SignUpRequest, StatusCode,
+};
 use tokio::time::sleep;
 use tonic::Request;
 use uuid::Uuid;
@@ -47,11 +49,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         );
 
         // --------------------------------------
-        
+
         let session_token = sign_in_response.session_token;
-        let request = Request::new(SignOutRequest {
-            session_token
-        });
+        let request = Request::new(SignOutRequest { session_token });
 
         let response = client.sign_out(request).await?;
 
