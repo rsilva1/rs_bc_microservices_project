@@ -1,5 +1,5 @@
-use std::{env, error::Error};
 use clap::{Parser, Subcommand};
+use std::{env, error::Error};
 
 use authentication::{auth_client::AuthClient, SignInRequest, SignOutRequest, SignUpRequest};
 use tonic::Request;
@@ -50,23 +50,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
             });
             let response = client.sign_in(request).await?.into_inner();
             println!("{:?}", response);
-        },
+        }
         Some(Commands::SignUp { username, password }) => {
             let request = Request::new(SignUpRequest {
                 username: username.to_owned(),
-                password: password.to_owned()
+                password: password.to_owned(),
             });
             let response = client.sign_up(request).await?.into_inner();
             println!("{:?}", response);
-        },
+        }
         Some(Commands::SignOut { session_token }) => {
             let request = Request::new(SignOutRequest {
-                session_token: session_token.to_owned()
+                session_token: session_token.to_owned(),
             });
             let response = client.sign_out(request).await?.into_inner();
             println!("{:?}", response);
-        },
-        None => {},
+        }
+        None => {}
     }
 
     Ok(())
